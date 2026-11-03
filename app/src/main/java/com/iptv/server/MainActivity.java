@@ -3,11 +3,13 @@ package com.iptv.server;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.text.InputType;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
+import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
@@ -47,6 +49,7 @@ public class MainActivity extends Activity {
         s.setMediaPlaybackRequiresUserGesture(false);
         s.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
 
+        web.addJavascriptInterface(new Bridge(), "AndroidApp");
         web.setWebViewClient(new WebViewClient() {
             @Override
             public void onReceivedError(WebView v, WebResourceRequest r, WebResourceError e) {
@@ -77,6 +80,16 @@ public class MainActivity extends Activity {
 
         String u = prefs.getString("url", "");
         if (u.isEmpty()) askAddress(false); else web.loadUrl(u);
+    }
+
+    /** Lets the page rotate the phone to landscape while a video plays. */
+    public class Bridge {
+        @JavascriptInterface
+        public void landscape(final boolean on) {
+            runOnUiThread(() -> setRequestedOrientation(on
+                    ? ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+                    : ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED));
+        }
     }
 
     private void askAddress(final boolean error) {
